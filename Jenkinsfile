@@ -1,13 +1,14 @@
 pipeline {
   agent any
   stages {
+
     stage('Compile') {
       steps{
         sh 'mvn clean compile'
       }
     }
 
-    stage('UnitTest') {
+    stage('Test') {
       steps{
         sh 'mvn clean test'
       }
@@ -15,30 +16,14 @@ pipeline {
     
     stage('Package') {
       steps{
-        sh 'mvn package'
-     }
+        sh 'mvn clean package'
+      }
     }
-
-    stage('Deliver') {
+    
+    stage('ContDeliver') {
       steps{
-        deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://172.31.87.232:9090/')], contextPath: null, war: 'target/calculator.war'
-     }
-    }
-    
-    stage('Docker Build') {
-      steps {
-        sh 'docker build -t pbeniwal/mycalcwithwar:v$BUILD_NUMBER .'
+        deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://18.213.0.69:9090/calculator/')], contextPath: null, war: 'target/calculator.war'
       }
     }
-    
-    stage('Docker Push') {
-      steps {
-      	withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
-        	sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
-          sh 'docker push pbeniwal/mycalcwithwar:v$BUILD_NUMBER'
-        }
-      }
-    }
-    
   }
 }
